@@ -64,7 +64,7 @@ describe("Vercel deployment configuration", () => {
   it("reports configuration errors together without exposing secrets", () => {
     const errors = productionErrors({
       ...production,
-      AUTH_ISSUER: "http://localhost:3000",
+      AUTH_ISSUER: "https://user:password@issuer.example.org",
       AUTH_PRIVATE_JWK: "not-json",
       NEXTAUTH_SECRET: "short-secret",
       FORM_GATEWAY_SECRET: "tiny",
@@ -106,5 +106,37 @@ describe("Vercel deployment configuration", () => {
           " ",
         ),
       ).toContain("production deployment key");
+  });
+  it("builds the frontend against an existing backend without a deploy key", () => {
+    for (const key of ["", "dev:existing-backend|test-key"]) {
+      expect(
+        productionErrors({
+          ...production,
+          CONVEX_DEPLOY_KEY: key,
+          AUTH_ISSUER: "http://localhost:3000",
+        }),
+      ).toEqual([]);
+    }
+    expect(
+      productionErrors({ ...production, NEXT_PUBLIC_CONVEX_URL: "" }).join(" "),
+    ).toContain("NEXT_PUBLIC_CONVEX_URL is missing");
+  });
+  it("preserves existing issuer identifiers while rejecting malformed issuers", () => {
+    for (const issuer of [
+      "http://localhost:3000",
+      "https://issuer.example.org/auth",
+    ]) {
+      const config = { ...production, AUTH_ISSUER: issuer };
+      expect(productionErrors(config)).toEqual([]);
+      expect(config.AUTH_ISSUER).toBe(issuer);
+    }
+    for (const issuer of [
+      "not-a-url",
+      "javascript:alert(1)",
+      "https://issuer.example.org#fragment",
+    ])
+      expect(
+        productionErrors({ ...production, AUTH_ISSUER: issuer }).join(" "),
+      ).toContain("AUTH_ISSUER must be");
   });
 });

@@ -191,27 +191,27 @@ Daily cleanup deletes up to 500 expired rate-limit rows and 500 click records ol
 ## Vercel deployment
 
 1. Create a Git repository and push to a private or public GitHub repository you control. Review staged files: `.env.local`, `auth-keys.local.json`, deployment keys, and OAuth secrets must remain ignored.
-2. Create/select the **production** Convex deployment in your project. Configure its environment variables separately from development.
-3. Generate separate production signing material and session/gateway secrets. Use a stable production `AUTH_ISSUER`, such as your assigned `https://project-name.vercel.app`.
+2. Select the existing deployed Convex backend and set its HTTPS URL as `NEXT_PUBLIC_CONVEX_URL` in Vercel. The default build only deploys the frontend; it does not change backend code or require `CONVEX_DEPLOY_KEY`. Reusing the current development backend works for initial deployment, but it continues to share development data. Use a separate production backend for a public launch with isolated data.
+3. Set the signing material, gateway secret, and **exact existing** `AUTH_ISSUER` matching that backend. An existing issuer such as `http://localhost:3000` is a signed identifier, not a network endpoint or OAuth callback. It can remain unchanged when deploying the frontend over HTTPS. For a new production backend, generate separate signing/session/gateway secrets and choose a stable HTTPS issuer.
 4. Import the repository into Vercel using the Next.js preset. Set the root directory to this project.
 5. Set Vercel environment variables from the table. You do not need to buy or invent a domain: Vercel assigns a free `.vercel.app` address when importing the project. Enable **Automatically expose System Environment Variables** in Vercel settings. For Production, missing, placeholder, or localhost `NEXT_PUBLIC_SITE_URL` / `NEXTAUTH_URL` values automatically resolve to `https://<VERCEL_PROJECT_PRODUCTION_URL>` during the build. The resolved public origins are included in the Next.js configuration for runtime use. Set both explicitly if using a custom domain. Preview uses its own `VERCEL_URL`; its Google callback still requires registration.
-6. Create a Convex **production deploy key** with deployment permission. Add it to Vercel as `CONVEX_DEPLOY_KEY`, scoped to **Production only**.
+6. A deploy key is optional for the default frontend build. Only if automatically deploying backend changes too, create a Convex **production deploy key**, add it as `CONVEX_DEPLOY_KEY` scoped to **Production only**, and change the Vercel Build Command to `npm run deploy:full`.
 7. Register the production Google callback: `https://YOUR_ACTUAL_VERCEL_HOST/api/auth/callback/google`. Update the consent-screen authorized domains/test-user/publishing configuration as applicable.
-8. Run an initial `npx convex deploy` against your production deployment from the authenticated CLI so backend queries exist before the first frontend build. Verify the deployment selection before confirming.
-9. `vercel.json` runs `npm ci`, then `npm run deploy:build`. Its preflight checks report configuration errors together **before** contacting Convex and require a production deployment key in Vercel Production. The build then uses:
+8. Ensure backend queries exist before the first frontend build. The current configured backend is already deployed. When selecting a new production backend, deploy its functions separately and configure its matching JWKS, issuer, gateway secret and administrator allowlist.
+9. `vercel.json` runs `npm ci`, then `npm run deploy:build` (which runs `npm run build`). Configuration validation still requires HTTPS for the public site, OAuth callback and backend URL. The optional `npm run deploy:full` checks the production deploy key **before** contacting Convex, then runs:
 
    ```text
    convex deploy --cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL --cmd "npm run build"
    ```
 
-   The Convex CLI supplies the correct deployment URL to the frontend build. Never manually substitute development data into a production build.
+   In this optional combined mode, the Convex CLI supplies the deployment URL to the frontend build. Development keys remain blocked for this mode in Vercel Production.
 
 10. Deploy in Vercel. Check build and function logs, visit the returned HTTPS URL, and complete the smoke tests below.
-11. For branch previews, use a **separate preview deploy key** scoped to Preview. Do not reuse the production key. Preview OAuth needs a stable approved callback host; avoid passing production secrets into arbitrary untrusted pull requests.
+11. Branch previews can build against an explicitly configured existing backend, or use a **separate preview deploy key** scoped to Preview with the combined command. Do not reuse the production key. Preview OAuth needs an approved callback host; avoid passing production secrets into arbitrary untrusted pull requests.
 
 When connecting a custom domain later, use Vercel's Domains panel and its displayed DNS records. Update public origin, `NEXTAUTH_URL`, Google OAuth callback/authorized origins, and social/SEO links. Keep the JWT issuer stable unless intentionally migrating identities. Verify HTTPS, redirects, canonicals, sitemap, cookies, and form origin checks. Redeploy after changing build-time public environment variables.
 
-If a build reports `NEXT_PUBLIC_SITE_URL must be a public HTTPS origin`, ensure system environment variables are exposed, or copy the address from **Project → Settings → Domains** into both public URL variables with `https://`. Do not use `localhost`, a guessed domain, or a URL ending in `/signin`. `AUTH_ISSUER` is deliberately never inferred: choose a stable HTTPS origin for a **new production backend**, set the exact same value in Convex and Vercel, and configure that backend's matching public JWKS, gateway secret, and administrator email allowlist. Do not change the issuer of existing development users to fix a frontend build. If the log labels the Convex target `[Development]`, replace the Vercel Production `CONVEX_DEPLOY_KEY` with the key from your **production** Convex deployment before retrying.
+If a build reports `NEXT_PUBLIC_SITE_URL must be a public HTTPS origin`, ensure system environment variables are exposed, or copy the address from **Project → Settings → Domains** into both public URL variables with `https://`. Do not use `localhost`, a guessed domain, or a URL ending in `/signin`. `AUTH_ISSUER` is deliberately never inferred or rewritten. Keep its exact existing value in Convex and Vercel. The default `deploy:build` does not use the deploy key; `deploy:full` requires a production key when building for Vercel Production.
 
 ### Production smoke tests
 
@@ -295,7 +295,7 @@ The JWT bridge is an application-owned integration built on those documented API
 ## Verification completed
 
 - ESLint passed; TypeScript and production builds passed.
-- 43 backend/unit tests passed, covering deployment URL resolution and preflight checks, authorization, role-aware account controls, raw/normalized verified-email claims, profile preference saves, dashboard guards, publication privacy, data integrity, forms, redirects, sanitization and safe repeatable category initialization.
+- 45 backend/unit tests passed, covering deployment URL resolution, existing-backend builds, stable issuer preservation and preflight checks, authorization, role-aware account controls, raw/normalized verified-email claims, profile preference saves, dashboard guards, publication privacy, data integrity, forms, redirects, sanitization and safe repeatable category initialization.
 - 22 browser checks passed against the configured production build, covering login/signup/admin entry points, navigation, header/hero search, mobile dialogs, empty-content states, image loading, reduced motion, protected routes, form validation, anonymous token access, metadata, sitemap, and layouts from 320px to 1440px.
 - Desktop and mobile homepage screenshots were visually inspected; the editorial images loaded successfully.
 - The configured Convex development deployment's settings, categories and content list functions were verified live. A read-only signed-token probe also confirmed that the deployment accepts the configured signing key and issuer. Google OAuth consent/login, authenticated dashboard browser flows and Vercel deployment remain unverified.

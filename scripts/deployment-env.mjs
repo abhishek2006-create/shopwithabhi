@@ -46,7 +46,6 @@ export function productionErrors(env, beforeDeploy = false) {
   for (const key of [
     "NEXT_PUBLIC_SITE_URL",
     "NEXTAUTH_URL",
-    "AUTH_ISSUER",
     ...(!beforeDeploy ? ["NEXT_PUBLIC_CONVEX_URL"] : []),
   ]) {
     if (!values[key]) continue;
@@ -68,6 +67,26 @@ export function productionErrors(env, beforeDeploy = false) {
     } catch {
       errors.push(
         `${key} must be a public HTTPS origin, without a path, query, or credentials.`,
+      );
+    }
+  }
+  // Custom-JWT issuer is an exact signed identifier, not a fetched endpoint.
+  // Requiring it to equal a public HTTPS origin breaks existing user identities.
+  if (values.AUTH_ISSUER) {
+    try {
+      const issuer = new URL(values.AUTH_ISSUER);
+      if (
+        !["http:", "https:"].includes(issuer.protocol) ||
+        issuer.username ||
+        issuer.password ||
+        issuer.search ||
+        issuer.hash ||
+        values.AUTH_ISSUER !== values.AUTH_ISSUER.trim()
+      )
+        throw new Error();
+    } catch {
+      errors.push(
+        "AUTH_ISSUER must be a valid HTTP(S) identifier matching the exact AUTH_ISSUER configured in Convex. It is never inferred from the website domain.",
       );
     }
   }

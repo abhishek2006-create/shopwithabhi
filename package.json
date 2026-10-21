@@ -14,8 +14,9 @@
     "setup:backend": "node scripts/setup-backend.mjs",
     "check:backend": "node scripts/check-backend.mjs",
     "keys": "node scripts/generate-keys.mjs",
-    "predeploy:build": "node scripts/validate-env.mjs --before-deploy",
-    "deploy:build": "convex deploy --cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL --cmd \"npm run build\"",
+    "deploy:build": "npm run build",
+    "predeploy:full": "node scripts/validate-env.mjs --before-deploy",
+    "deploy:full": "convex deploy --cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL --cmd \"npm run build\"",
     "format": "prettier --write .",
     "prebuild": "node scripts/validate-env.mjs"
   },
