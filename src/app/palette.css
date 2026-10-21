@@ -1,0 +1,274 @@
+:root {
+  --glass-surface: rgba(255, 255, 255, 0.82);
+  --glass-edge: var(--border);
+  --glass-shadow: 0 16px 48px rgba(34, 34, 34, 0.045);
+}
+body {
+  background: var(--paper);
+}
+::selection {
+  background: #ff8a0033;
+  color: var(--ink);
+}
+:focus-visible {
+  outline-color: var(--link);
+}
+input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+.announcement {
+  background: var(--ink);
+  color: var(--paper);
+}
+.announcement a {
+  color: var(--paper);
+}
+.announcement a svg {
+  color: var(--accent);
+}
+.header,
+.publication-header {
+  background: #fffdf8ed;
+  border-color: var(--border);
+  box-shadow: 0 4px 32px #22222205;
+}
+.wordmark,
+.wordmark > span:not(.logo-mark),
+.publication-welcome h1,
+.publication-welcome h1 span,
+.promise-layout h2 span {
+  color: var(--ink);
+}
+.wordmark > .brand-dot {
+  color: var(--accent);
+}
+.logo-mark {
+  background: var(--ink);
+  color: var(--paper);
+}
+.publication-intro {
+  background: var(--section);
+  border-color: var(--border);
+}
+.publication-intro::before {
+  background: radial-gradient(circle at 35% 60%, #ffffffc9, #ffffff00 70%);
+}
+.publication-intro::after {
+  background: radial-gradient(circle, #ffffffb3, #ffffff00 70%);
+}
+.publication-welcome h1 span {
+  background: none;
+  -webkit-text-fill-color: var(--ink);
+}
+.publication-welcome > p,
+.publication-utility,
+.quick-link p,
+.footer-grid > div:not(:first-child) a,
+.image-placeholder {
+  color: var(--muted);
+}
+.welcome-doodle {
+  color: var(--ink);
+  box-shadow:
+    0 20px 50px #2222220a,
+    inset 0 1px 0 #ffffff;
+}
+.welcome-doodle svg path:nth-child(3) {
+  stroke: var(--accent);
+}
+.green-dot,
+.reading-progress {
+  background: var(--accent);
+}
+.quick-icon,
+.category-icon,
+.tone-1,
+.tone-2,
+.promise-points > div > span {
+  background: var(--section);
+  color: var(--ink);
+}
+.quick-link,
+.publication-categories > a,
+.content-card,
+.category-card,
+.panel,
+.metric,
+.signin-box,
+.article-aside,
+.filter-form,
+.empty {
+  background: var(--card);
+  border-color: var(--border);
+  box-shadow: var(--glass-shadow);
+}
+.latest-rail,
+.comparison-feature,
+.publication-home .newsletter,
+.newsletter,
+.footer,
+.editorial-empty,
+.card-image,
+.secondary-story-image,
+.specs th,
+.pros-cons > div,
+.pros-cons > div:last-child {
+  background: var(--section);
+  border-color: var(--border);
+}
+.latest-heading {
+  border-bottom-color: var(--accent);
+}
+.story-number {
+  color: var(--muted);
+}
+.lead-story-image {
+  box-shadow: 0 16px 40px #22222212;
+}
+.lead-story-image::after {
+  background: linear-gradient(transparent 50%, #22222230);
+}
+.image-corner-label,
+.story-image-arrow {
+  color: var(--ink);
+  background: #fffffff0;
+}
+.publication-categories .category-icon {
+  box-shadow: inset 0 1px 0 #ffffff;
+}
+.publication-categories > a > .lucide,
+.text-link > svg,
+.rail-end > svg,
+.category-arrow {
+  color: var(--accent);
+}
+.discovery-tabs {
+  border-color: var(--border);
+}
+.discovery-tabs button[aria-selected="true"] {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+.comparison-paper {
+  color: var(--ink);
+  border-color: var(--border);
+  background: #ffffffde;
+  box-shadow: 0 18px 38px #22222212;
+}
+.comparison-paper i {
+  background: var(--border);
+}
+.versus,
+.input-button,
+.newsletter input,
+.search-dialog input {
+  border-color: var(--border);
+  color: var(--ink);
+  background: var(--card);
+}
+.mega-menu,
+.mobile-nav,
+.search-dialog,
+.account-dropdown-panel {
+  background: #fffdf8f5;
+  border-color: var(--border);
+  box-shadow:
+    0 24px 64px #2222221a,
+    inset 0 1px 0 #ffffff;
+}
+.search-dialog::backdrop {
+  background: #222222ad;
+}
+.button,
+.account-signup,
+.input-button button {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--ink);
+  box-shadow: 0 6px 18px #2222220a;
+}
+.button:hover,
+.account-signup:hover,
+.input-button button:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--ink);
+}
+.button.secondary,
+.header-subscribe,
+.account-dropdown summary,
+.mobile-nav .account-mobile a {
+  color: var(--ink);
+  background: var(--card);
+  border-color: var(--border);
+}
+.mobile-nav .account-mobile .account-signup {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.button.secondary:hover,
+.mega-links > a:hover,
+.account-dropdown-panel a:hover,
+.account-dropdown-panel button:hover,
+.header-subscribe:hover {
+  background: var(--section);
+  border-color: var(--border);
+  color: var(--ink);
+}
+.text-link,
+.rail-end,
+.prose a,
+.signin-switch a,
+.signin-admin-link {
+  color: var(--link);
+}
+a:hover,
+.footer-grid > div:not(:first-child) a:hover {
+  color: var(--link);
+}
+.desktop-nav a,
+.nav-category-button,
+.mobile-nav > a {
+  color: var(--ink);
+}
+.desktop-nav a[aria-current="page"] {
+  text-decoration-color: var(--accent);
+}
+.quick-link:hover,
+.publication-categories > a:hover,
+.category-card:hover {
+  border-color: var(--accent);
+  background: var(--card);
+  color: var(--ink);
+  box-shadow: 0 18px 38px #2222220a;
+}
+.prose blockquote {
+  border-left-color: var(--accent);
+}
+.search-suggestions a,
+.badge {
+  background: var(--section);
+  color: var(--ink);
+}
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--section),
+    var(--paper),
+    var(--section)
+  );
+}
+.editorial-empty-art {
+  color: var(--ink);
+  background: var(--card);
+  border-color: var(--border);
+}
+@media (prefers-reduced-transparency: reduce) {
+  .publication-header,
+  .mega-menu,
+  .mobile-nav,
+  .search-dialog,
+  .account-dropdown-panel {
+    background: var(--paper);
+  }
+}
