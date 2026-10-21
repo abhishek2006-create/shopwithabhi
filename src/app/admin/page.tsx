@@ -3,6 +3,7 @@ import { useQuery } from "convex/react";
 import Link from "next/link";
 import { api } from "../../../convex/_generated/api";
 import { Reveal } from "@/components/reveal";
+import { AdminTeam } from "@/components/admin-team";
 export default function Admin() {
   const metrics = useQuery(api.admin.overview, {});
   const content = useQuery(api.admin.contentMetrics, {});
@@ -63,6 +64,7 @@ export default function Admin() {
         Newsletter records include unsubscribed addresses. Clicks are not
         purchases or commissions.
       </div>
+      <AdminTeam />
       <div className="panel">
         <h3>Before your first publication</h3>
         <p style={{ marginTop: 15 }}>

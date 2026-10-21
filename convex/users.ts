@@ -1,6 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
-import { currentUser } from "./security";
+import { audit, currentUser } from "./security";
 import { verifiedProfile } from "./identity";
 export const connectionStatus = query({
   args: {},
@@ -20,16 +20,29 @@ export const sync = mutation({
     const profile = verifiedProfile(identity);
     if (!identity || !profile)
       throw new Error("Verified Google identity required.");
-    const old = await ctx.db
-      .query("users")
-      .withIndex("by_subject", (q) => q.eq("subject", identity.tokenIdentifier))
-      .unique();
-    if (old) return old._id;
     // Only signed, verified identity claims can match this server-owned allowlist.
     const admins = (process.env.ADMIN_EMAILS || "")
       .split(",")
       .map((x) => x.trim().toLowerCase())
       .filter(Boolean);
+    const old = await ctx.db
+      .query("users")
+      .withIndex("by_subject", (q) => q.eq("subject", identity.tokenIdentifier))
+      .unique();
+    if (old) {
+      // Adding an administrator must also work after they already signed up.
+      // Preserve edited profiles, existing admin grants, and deletion requests.
+      if (
+        admins.includes(profile.email) &&
+        old.role !== "ADMIN" &&
+        !old.deletionRequestedAt &&
+        old.email.toLowerCase() === profile.email
+      ) {
+        await ctx.db.patch(old._id, { role: "ADMIN", updatedAt: Date.now() });
+        await audit(ctx, old._id, "role.ADMIN.allowlist", old._id);
+      }
+      return old._id;
+    }
     return ctx.db.insert("users", {
       subject: identity.tokenIdentifier,
       name: profile.name,

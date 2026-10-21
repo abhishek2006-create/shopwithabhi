@@ -61,6 +61,136 @@ async function setup() {
   return { t, admin, reader };
 }
 describe("Convex authorization and content", () => {
+  it("shows the complete administrator team only to administrators", async () => {
+    const { t, admin, reader } = await setup();
+    vi.stubEnv(
+      "ADMIN_EMAILS",
+      "editor@example.test, second-admin@example.test, SECOND-ADMIN@example.test",
+    );
+    await expect(t.query(api.admin.administrators, {})).rejects.toThrow(
+      "Sign in to continue",
+    );
+    await expect(reader.query(api.admin.administrators, {})).rejects.toThrow(
+      "Administrator access required",
+    );
+    expect(await admin.query(api.admin.administrators, {})).toEqual({
+      total: 2,
+      active: [{ name: "Editor", email: "editor@example.test", isYou: true }],
+      pendingEmails: ["second-admin@example.test"],
+    });
+    const second = t.withIdentity({
+      subject: "second-admin",
+      issuer: "https://test.local",
+      email: "second-admin@example.test",
+      email_verified: true,
+      name: "Second admin",
+    });
+    await second.mutation(api.users.sync, {});
+    const team = await second.query(api.admin.administrators, {});
+    expect(team.total).toBe(2);
+    expect(team.pendingEmails).toEqual([]);
+    expect(team.active).toEqual([
+      { name: "Editor", email: "editor@example.test", isYou: false },
+      { name: "Second admin", email: "second-admin@example.test", isYou: true },
+    ]);
+    const readerId = (await reader.query(api.users.me, {}))!._id;
+    await admin.mutation(api.admin.setRole, { id: readerId, role: "ADMIN" });
+    expect((await admin.query(api.admin.administrators, {})).total).toBe(3);
+    await admin.mutation(api.admin.setRole, { id: readerId, role: "USER" });
+    expect((await admin.query(api.admin.administrators, {})).total).toBe(2);
+  });
+  it("promotes an existing allowlisted account and gives it full shop administration", async () => {
+    const backend = convexTest(schema, modules);
+    vi.stubEnv("ADMIN_EMAILS", "owner@example.test");
+    const ankit = backend.withIdentity({
+      subject: "new-admin",
+      issuer: "https://test.local",
+      email: "Ankit@Example.Test",
+      email_verified: true,
+      name: "Ankit",
+    });
+    const id = await ankit.mutation(api.users.sync, {});
+    await ankit.mutation(api.users.preferences, {
+      name: "Ankit's profile",
+      newsletter: false,
+    });
+    await expect(ankit.query(api.admin.overview, {})).rejects.toThrow(
+      "Administrator access required",
+    );
+    vi.stubEnv("ADMIN_EMAILS", "owner@example.test, ankit@example.test");
+    expect(await ankit.mutation(api.users.sync, {})).toBe(id);
+    expect(await ankit.query(api.users.me, {})).toMatchObject({
+      role: "ADMIN",
+      name: "Ankit's profile",
+    });
+    const categoryId = await ankit.mutation(api.admin.saveCategory, {
+      title: "Admin category",
+      slug: "admin-category",
+      description: "Test category",
+      image: "",
+      seoDescription: "",
+      order: 0,
+      active: true,
+    });
+    const contentId = await ankit.mutation(api.admin.saveContent, {
+      data: { ...base, categoryId },
+    });
+    await ankit.mutation(api.admin.saveSetting, {
+      key: "siteName",
+      value: "ShopWithAbhi",
+    });
+    const reader = backend.withIdentity({
+      subject: "another-reader",
+      issuer: "https://test.local",
+      email: "reader@example.test",
+      email_verified: true,
+    });
+    const readerId = await reader.mutation(api.users.sync, {});
+    await ankit.mutation(api.admin.setRole, { id: readerId, role: "ADMIN" });
+    expect((await reader.query(api.users.me, {}))?.role).toBe("ADMIN");
+    await ankit.mutation(api.admin.deleteContent, { id: contentId });
+    expect(
+      (await ankit.query(api.admin.getContent, { id: contentId }))?.status,
+    ).toBe("archived");
+    expect(await ankit.query(api.admin.overview, {})).toBeDefined();
+    await ankit.mutation(api.users.sync, {});
+    const promotions = await backend.run(async (ctx) =>
+      (await ctx.db.query("auditLogs").collect()).filter(
+        (row) => row.action === "role.ADMIN.allowlist",
+      ),
+    );
+    expect(promotions).toHaveLength(1);
+  });
+  it("does not promote unlisted accounts or reactivate accounts pending deletion", async () => {
+    const backend = convexTest(schema, modules);
+    vi.stubEnv("ADMIN_EMAILS", "");
+    const deleted = backend.withIdentity({
+      subject: "deleted-admin",
+      issuer: "https://test.local",
+      email: "ankit@example.test",
+      email_verified: true,
+    });
+    const id = await deleted.mutation(api.users.sync, {});
+    await deleted.mutation(api.users.requestDeletion, {});
+    vi.stubEnv("ADMIN_EMAILS", "ankit@example.test");
+    await deleted.mutation(api.users.sync, {});
+    expect(await deleted.query(api.users.me, {})).toBeNull();
+    expect((await backend.run((ctx) => ctx.db.get(id)))?.role).toBe("USER");
+    const lookalike = backend.withIdentity({
+      subject: "lookalike",
+      issuer: "https://test.local",
+      email: "notankit@example.test",
+      email_verified: true,
+    });
+    await lookalike.mutation(api.users.sync, {});
+    expect((await lookalike.query(api.users.me, {}))?.role).toBe("USER");
+    await expect(
+      lookalike.mutation(api.admin.saveSetting, {
+        key: "siteName",
+        value: "Changed",
+      }),
+    ).rejects.toThrow("Administrator access required");
+  });
   it("syncs raw custom-JWT claims and saves profile settings", async () => {
     const backend = convexTest(schema, modules);
     vi.stubEnv("ADMIN_EMAILS", "editor@example.test");

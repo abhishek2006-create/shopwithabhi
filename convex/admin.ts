@@ -16,6 +16,64 @@ const section = v.union(
   v.literal("newsletterSubscribers"),
   v.literal("auditLogs"),
 );
+export const administrators = query({
+  args: {},
+  returns: v.object({
+    total: v.number(),
+    active: v.array(
+      v.object({ name: v.string(), email: v.string(), isYou: v.boolean() }),
+    ),
+    pendingEmails: v.array(v.string()),
+  }),
+  handler: async (ctx) => {
+    const actor = await requireAdmin(ctx);
+    const rows = await ctx.db
+      .query("users")
+      .withIndex("by_role", (q) => q.eq("role", "ADMIN"))
+      .collect();
+    const byEmail = new Map<
+      string,
+      { name: string; email: string; isYou: boolean }
+    >();
+    for (const user of rows) {
+      if (user.deletionRequestedAt) continue;
+      const email = user.email.trim().toLowerCase();
+      byEmail.set(email, {
+        name: user.name,
+        email,
+        isYou: user._id === actor._id || byEmail.get(email)?.isYou === true,
+      });
+    }
+    const configured = [
+      ...new Set(
+        (process.env.ADMIN_EMAILS || "")
+          .split(",")
+          .map((email) => email.trim().toLowerCase())
+          .filter(Boolean),
+      ),
+    ];
+    const pendingEmails: string[] = [];
+    for (const email of configured) {
+      if (byEmail.has(email)) continue;
+      const accounts = await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", email))
+        .collect();
+      if (accounts.length && accounts.every((user) => user.deletionRequestedAt))
+        continue;
+      pendingEmails.push(email);
+    }
+    const active = [...byEmail.values()].sort((a, b) =>
+      a.email.localeCompare(b.email),
+    );
+    pendingEmails.sort();
+    return {
+      total: active.length + pendingEmails.length,
+      active,
+      pendingEmails,
+    };
+  },
+});
 export const list = query({
   args: { section, paginationOpts: paginationOptsValidator },
   handler: async (ctx, a) => {

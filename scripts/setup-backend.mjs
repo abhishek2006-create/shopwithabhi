@@ -25,7 +25,13 @@ const administrator = process.argv
 if (administrator) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(administrator))
     throw new Error("Provide a valid administrator email.");
-  updates.ADMIN_EMAILS = administrator.trim().toLowerCase();
+  updates.ADMIN_EMAILS = [
+    ...new Set(
+      [...(process.env.ADMIN_EMAILS || "").split(","), administrator]
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean),
+    ),
+  ].join(",");
 }
 let privateJwk;
 if (process.env.AUTH_PRIVATE_JWK) {

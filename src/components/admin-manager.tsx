@@ -8,6 +8,7 @@ import type { Doc } from "../../convex/_generated/dataModel";
 import { initialCategories } from "@/config/navigation";
 import { slugify } from "@/lib/validation";
 import { Empty } from "./empty";
+import { AdminTeam } from "./admin-team";
 const sections = {
   products: "content",
   articles: "content",
@@ -82,7 +83,7 @@ export function AdminManager({ section }: { section: string }) {
             articles: "Articles & guides",
             comparisons: "Comparisons",
             categories: "Categories",
-            users: "Readers",
+            users: "Users & admins",
             messages: "Contact inbox",
             newsletter: "Newsletter",
             audit: "Audit trail",
@@ -90,6 +91,14 @@ export function AdminManager({ section }: { section: string }) {
         }
         .
       </h1>
+      {section === "users" && (
+        <p className="muted">
+          Administrators can manage products, articles, guides, comparisons,
+          categories, site settings, messages, subscribers, and user roles. A
+          person must sign in before their account appears here.
+        </p>
+      )}
+      {section === "users" && <AdminTeam />}
       <div className="toolbar">
         <input
           aria-label="Filter loaded records"

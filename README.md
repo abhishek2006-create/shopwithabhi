@@ -113,7 +113,7 @@ If you see **Could not find public function for 'content:settings'**, the select
 | `AUTH_PRIVATE_JWK`                           | Next.js / Vercel only         | Sign five-minute Convex tokens                              |
 | `AUTH_ISSUER`                                | Both Next.js and Convex       | Exact matching token issuer                                 |
 | `AUTH_JWKS`                                  | Convex only                   | Public verification keys, encoded as data URI               |
-| `ADMIN_EMAILS`                               | Convex only                   | First-login administrator allowlist                         |
+| `ADMIN_EMAILS`                               | Convex only                   | Verified-email administrator allowlist                      |
 | `FORM_GATEWAY_SECRET`                        | Both Next.js and Convex       | Authenticate the validated public-form gateway              |
 | `AFFILIATE_CLICK_TRACKING`                   | Both Next.js and Convex       | Optional clicks, default false                              |
 | `AMAZON_MARKETPLACE`, `AMAZON_ASSOCIATE_TAG` | Owner reference               | Reserved business configuration; no URLs are auto-generated |
@@ -132,7 +132,7 @@ Anonymous visitors can use **Log in** and **Sign up** in the desktop header. On 
 
 Keep `AUTH_ISSUER` stable after creating accounts, even if you later change the public domain. User identities include the issuer. A deliberate issuer change needs a reviewed user migration.
 
-The allowlist is checked when an account is first created. If you logged in before configuring it, an existing administrator can promote you in `/admin/users`. If no administrator exists, the Convex project owner can change that exact verified user record's role using the authenticated Convex dashboard. This is an operator-only bootstrap procedure, not a public API. Never make promotion a browser-controlled mutation.
+The allowlist is checked on every verified account sync. New matching accounts become administrators; existing active matching accounts are promoted on their next sign-in or dashboard request without losing profile edits. This promotion is audited once. Accounts pending deletion are not reactivated. Existing admins can also grant roles in **Admin → Users & admins**. The admin overview and Users & admins page show the administrator count, active names/emails, and configured emails awaiting verified sign-in. The backing query requires administrator authorization; regular readers and anonymous visitors cannot retrieve this list. All administrators have the same shop permissions: products, articles, guides, comparisons, categories, public site settings, messages, subscribers, and user roles. Removing an email from the allowlist does not automatically revoke an existing role; remove it from the allowlist and have another administrator change that account to `USER`. The setup command's `--admin-email` option adds to the local list instead of replacing existing administrators. Role grants always require verified identity claims or an already authenticated administrator.
 
 For key rotation, publish a JWKS containing both old and new public keys, deploy the new private key with a new `kid`, wait beyond the five-minute token lifetime, then remove the old key.
 
@@ -297,7 +297,7 @@ The JWT bridge is an application-owned integration built on those documented API
 ## Verification completed
 
 - ESLint passed; TypeScript and production builds passed.
-- 45 backend/unit tests passed, covering deployment URL resolution, existing-backend builds, stable issuer preservation and preflight checks, authorization, role-aware account controls, raw/normalized verified-email claims, profile preference saves, dashboard guards, publication privacy, data integrity, forms, redirects, sanitization and safe repeatable category initialization.
+- 48 backend/unit tests passed, covering private administrator listings, administrator additions and shop permissions, deployment URL resolution, existing-backend builds, stable issuer preservation and preflight checks, authorization, role-aware account controls, raw/normalized verified-email claims, profile preference saves, dashboard guards, publication privacy, data integrity, forms, redirects, sanitization and safe repeatable category initialization.
 - 22 browser checks passed against the configured production build, covering login/signup/admin entry points, navigation, header/hero search, mobile dialogs, empty-content states, image loading, reduced motion, protected routes, form validation, anonymous token access, metadata, sitemap, and layouts from 320px to 1440px.
 - Desktop and mobile homepage screenshots were visually inspected; the editorial images loaded successfully.
 - The configured Convex development deployment's settings, categories and content list functions were verified live. A read-only signed-token probe also confirmed that the deployment accepts the configured signing key and issuer. Google OAuth consent/login, authenticated dashboard browser flows and Vercel deployment remain unverified.

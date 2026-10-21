@@ -49,7 +49,10 @@ export default defineSchema({
     newsletter: v.boolean(),
     deletionRequestedAt: v.optional(v.number()),
     updatedAt: v.number(),
-  }).index("by_subject", ["subject"]),
+  })
+    .index("by_subject", ["subject"])
+    .index("by_role", ["role"])
+    .index("by_email", ["email"]),
   content: defineTable(contentFields)
     .index("by_slug", ["slug"])
     .index("by_status_kind", ["status", "kind", "updatedAt"])

@@ -12,7 +12,7 @@ export function AdminNav() {
         ["Articles & guides", "/articles"],
         ["Comparisons", "/comparisons"],
         ["Categories", "/categories"],
-        ["Readers", "/users"],
+        ["Users & admins", "/users"],
         ["Contact inbox", "/messages"],
         ["Newsletter", "/newsletter"],
         ["Site settings", "/settings"],
