@@ -1,5 +1,9 @@
 import type { NextConfig } from "next";
+import { deploymentUrls } from "./scripts/deployment-env.mjs";
+const urls = deploymentUrls(process.env);
 const config: NextConfig = {
+  // Public origins only; never include credentials in Next.js env configuration.
+  env: Object.fromEntries(Object.entries(urls).filter(([, value]) => value)),
   turbopack: { root: process.cwd() },
   images: {
     remotePatterns: [
