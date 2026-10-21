@@ -1,5 +1,7 @@
 # ShopWithAbhi
 
+live-link : https://shopwithabhi-pghg-cok5wx8ef-abhishek-009c.vercel.app/
+
 A Next.js App Router publication for product discovery, research-based reviews, buying guides, comparisons, and Amazon affiliate links. The interface uses ivory, charcoal, orange accents, restrained motion, and an editorial layout.
 
 ## What is implemented
